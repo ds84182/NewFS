@@ -1,0 +1,30 @@
+local nfs = loadfile("newfs")()
+local args = {...}
+local pdir = args[1]
+
+function addFile(par,fpath)
+	local name = fs.getName(fpath)
+	local f = {type="FILE",name=name,content=""}
+	local fh = fs.open(fpath,"r")
+	f.content = fh.readAll()
+	fh.close()
+	table.insert(par.child,f)
+end
+
+function addDirectory(par,fpath)
+	local name = fs.getName(fpath)
+	local f = {type="DIR",name=name,child={}}
+	for i,v in pairs(fs.list(fpath)) do
+		local np = fs.combine(fpath,v)
+		if fs.isDir(np) then
+			addDirectory(f,np)
+		else
+			addFile(f,np)
+		end
+	end
+	table.insert(par.child,f)
+end
+
+local root = {child={}}
+addDirectory(root,fs.combine(shell.dir(),pdir))
+nfs.encode(fs.getName(pdir)..".nfs",root.child[1])

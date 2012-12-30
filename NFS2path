@@ -1,0 +1,24 @@
+local nfs = loadfile("newfs")()
+local args = {...}
+local pdir = args[1]
+
+function exportFile(entry,path)
+	local fh = fs.open(fs.combine(path,entry.name),"w")
+	fh.write(entry.content)
+	fh.close()
+end
+
+function exportDir(entry,path)
+	fs.makeDir(path)
+	for i,v in pairs(entry.child) do
+		print(path,v.name)
+		if v.type == "FILE" then
+			exportFile(v,path)
+		else
+			exportDir(v,fs.combine(path,v.name))
+		end
+	end
+end
+
+local root = nfs.decode(fs.combine(shell.dir(),pdir..".nfs"))
+exportDir(root,fs.combine(shell.dir(),pdir))
